@@ -41,13 +41,13 @@ body {
   shape-rendering: crispEdges;
 }
 
-.diagram-lines path.pulse {
+.diagram-lines path.signal {
   stroke: var(--pulse);
   stroke-width: var(--pulse-width);
   stroke-linecap: square;
   stroke-dasharray: 12 260;
-  /* duration is set per-path via inline style --signal-duration */
-  animation: signal var(--signal-duration, 10s) linear infinite;
+  /* one-shot traversal; duration set per-path via --signal-duration */
+  animation: pulseOnce var(--signal-duration, 1.4s) linear 1;
 }
 
 .page {
@@ -105,37 +105,34 @@ footer {
   font-size: 0.95rem;
 }
 
-@keyframes signal {
-  /* Simulate a quick acceleration, a mid-junction brightening, then gentle deceleration */
+@keyframes pulseOnce {
+  /* One traversal with slight flicker and dash irregularity to suggest energy */
   0% {
     stroke-dashoffset: var(--sd-offset, var(--sd-default));
+    stroke-dasharray: var(--dash, 12) var(--gap, 220);
     opacity: 0.06;
   }
-  15% {
-    /* initial rise */
-    stroke-dashoffset: calc(var(--sd-offset, var(--sd-default)) * 0.6);
+  25% {
+    /* accelerate and brighten slightly with a small dash irregularity */
+    stroke-dashoffset: calc(var(--sd-offset, var(--sd-default)) * 0.4);
+    stroke-dasharray: calc(var(--dash, 12) * 0.9) calc(var(--gap, 220) * 1.08);
     opacity: 0.34;
   }
-  30% {
-    /* move faster toward junction */
-    stroke-dashoffset: calc(var(--sd-offset, var(--sd-default)) * 0.25);
+  50% {
+    /* mid-traverse subtle flicker / junction highlight */
+    stroke-dashoffset: calc(var(--sd-offset, var(--sd-default)) * 0.02);
+    stroke-dasharray: calc(var(--dash, 12) * 1.05) calc(var(--gap, 220) * 0.94);
+    opacity: 0.48;
+  }
+  75% {
+    /* decelerate and fade */
+    stroke-dashoffset: calc(var(--sd-offset, var(--sd-default)) * -0.35);
+    stroke-dasharray: calc(var(--dash, 12) * 0.98) calc(var(--gap, 220) * 1.02);
     opacity: 0.22;
-  }
-  45% {
-    /* brief junction spike to suggest corner traversal */
-    stroke-dashoffset: calc(var(--sd-offset, var(--sd-default)) * 0.05);
-    opacity: 0.56;
-  }
-  60% {
-    /* easing out after junction */
-    stroke-dashoffset: calc(var(--sd-offset, var(--sd-default)) * -0.25);
-    opacity: 0.28;
-  }
-  85% {
-    opacity: 0.16;
   }
   100% {
     stroke-dashoffset: calc(var(--sd-offset, var(--sd-default)) * -1);
+    stroke-dasharray: var(--dash, 12) var(--gap, 220);
     opacity: 0.06;
   }
 }
@@ -151,7 +148,7 @@ footer {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .diagram-lines path.pulse {
+  .diagram-lines path.signal {
     animation: none;
   }
 }

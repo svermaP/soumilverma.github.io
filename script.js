@@ -1,75 +1,87 @@
 const prefersReduced = window.matchMedia("(prefers-reduced-motion: reduce)");
 
-let _pulseInterval = null;
+let _nextTimer = null;
+let _active = false;
 
 const clearSignals = () => {
-  if (_pulseInterval) {
-    clearInterval(_pulseInterval);
-    _pulseInterval = null;
+  if (_nextTimer) {
+    clearTimeout(_nextTimer);
+    _nextTimer = null;
   }
 
   document.querySelectorAll(".diagram-lines path").forEach((path) => {
-    path.classList.remove("pulse");
+    path.classList.remove("signal");
     path.style.animationDuration = "";
-    path.style.animationDelay = "";
     path.style.strokeDasharray = "";
+    path.style.removeProperty('--dash');
+    path.style.removeProperty('--gap');
     path.style.removeProperty('--sd-offset');
     path.style.removeProperty('--signal-duration');
+    path.removeEventListener('animationend', _onAnimationEnd);
   });
+  _active = false;
 };
 
-const applyOnce = () => {
-  const paths = Array.from(document.querySelectorAll(".diagram-lines path"));
-  if (!paths.length) return;
-
-  // pick either 1 or 2 active pulses (1 more commonly)
-  const activeCount = Math.random() < 0.6 ? 1 : 2;
-  const shuffled = paths.sort(() => Math.random() - 0.5);
-
-  // clear any existing pulse classes but keep static lines subtle
-  paths.forEach((p) => {
-    p.classList.remove("pulse");
-    p.style.animationDuration = "";
-    p.style.animationDelay = "";
-    p.style.strokeDasharray = "";
-    p.style.removeProperty('--sd-offset');
-    p.style.removeProperty('--signal-duration');
-  });
-
-  shuffled.slice(0, activeCount).forEach((path) => {
-    path.classList.add("pulse");
-
-    // make pulses shorter and slightly higher contrast
-    const duration = 6 + Math.random() * 6; // 6 - 12s
-    const delay = Math.random() * 1.2; // small stagger
-    const dash = 8 + Math.random() * 12; // visible short dash
-    const gap = 160 + Math.random() * 200; // larger gap for travel feel
-
-    path.style.animationDuration = `${duration.toFixed(1)}s`;
-    path.style.animationDelay = `${delay.toFixed(2)}s`;
-    path.style.strokeDasharray = `${Math.round(dash)} ${Math.round(gap)}`;
-    // expose values to CSS keyframes
-    path.style.setProperty('--sd-offset', `${Math.round(gap)}`);
-    path.style.setProperty('--signal-duration', `${duration.toFixed(1)}s`);
-  });
-};
-
-const applySignals = () => {
-  // start an immediate pass and then rotate pulses periodically
-  applyOnce();
-  if (_pulseInterval) clearInterval(_pulseInterval);
-  _pulseInterval = setInterval(() => {
-    applyOnce();
-  }, 8000 + Math.random() * 5000); // rotate every ~8-13s
-};
-
-if (!prefersReduced.matches) {
-  applySignals();
+function _onAnimationEnd(e) {
+  const path = e.currentTarget;
+  path.classList.remove('signal');
+  path.style.animationDuration = '';
+  path.style.strokeDasharray = '';
+  path.style.removeProperty('--dash');
+  path.style.removeProperty('--gap');
+  path.style.removeProperty('--sd-offset');
+  path.style.removeProperty('--signal-duration');
+  path.removeEventListener('animationend', _onAnimationEnd);
+  _active = false;
+  scheduleNext();
 }
 
-prefersReduced.addEventListener("change", (event) => {
+function fireOnce() {
+  if (_active) return;
+  const paths = Array.from(document.querySelectorAll('.diagram-lines path'));
+  if (!paths.length) return;
+
+  // choose a single random path
+  const candidate = paths[Math.floor(Math.random() * paths.length)];
+  _active = true;
+
+  // traversal ~1–2s
+  const duration = 1 + Math.random() * 1; // 1.0 - 2.0s
+  const dash = 6 + Math.random() * 10; // small-ish dash
+  const gap = 120 + Math.random() * 240; // gap controls travel distance
+
+  candidate.style.strokeDasharray = `${Math.round(dash)} ${Math.round(gap)}`;
+  candidate.style.setProperty('--dash', Math.round(dash));
+  candidate.style.setProperty('--gap', Math.round(gap));
+  candidate.style.setProperty('--sd-offset', Math.round(gap));
+  candidate.style.setProperty('--signal-duration', `${duration.toFixed(2)}s`);
+
+  candidate.addEventListener('animationend', _onAnimationEnd);
+  // trigger one-shot animation by adding class
+  // small random micro-delay to avoid mechanical timing
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => {
+      candidate.classList.add('signal');
+    });
+  });
+}
+
+function scheduleNext() {
+  if (prefersReduced.matches) return;
+  // mostly idle; next signal in ~4–20s
+  const idle = 4000 + Math.random() * 16000;
+  _nextTimer = setTimeout(() => {
+    fireOnce();
+  }, idle);
+}
+
+if (!prefersReduced.matches) {
+  scheduleNext();
+}
+
+prefersReduced.addEventListener('change', (event) => {
   clearSignals();
   if (!event.matches) {
-    applySignals();
+    scheduleNext();
   }
 });
