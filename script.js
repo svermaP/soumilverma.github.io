@@ -64,7 +64,8 @@ function scheduleNext() {
     clearTimeout(timer);
     return;
   }
-  const delay = 4000 + Math.random() * 16000;
+  // Chain pulses immediately with minimal transition time
+  const delay = 200 + Math.random() * 300; // 200-500ms before next pulse
   timer = setTimeout(firePulse, delay);
 }
 
