@@ -13,35 +13,40 @@ function firePulse() {
 
   const length = path.getTotalLength();
 
-  // Pulse size relative to path
-  const dash = length * 0.22;
-  const gap = length;
-  const duration = 1.2 + Math.random() * 0.6;
+  // Dash size: 20–30% of path (the "packet")
+  const dashSize = length * (0.2 + Math.random() * 0.1);
+  // Gap: make it large enough for the dash to traverse the full path
+  const gapSize = length * 2.5;
+  const speed = 1.5 + Math.random() * 0.8; // 1.5–2.3 seconds
 
-  // Apply geometry first
-  path.style.strokeDasharray = `${dash} ${gap}`;
-  path.style.strokeDashoffset = gap;
+  // Apply dash geometry BEFORE animation
+  path.style.strokeDasharray = `${dashSize} ${gapSize}`;
+  // Start: dash is off-screen to the left (negative offset)
+  path.style.strokeDashoffset = -(dashSize + length * 0.5);
 
-  // Force layout so SVG commits dash state
-  path.getBoundingClientRect();
+  // Force browser reflow to commit SVG state before animation
+  void path.offsetWidth;
 
-  path.style.setProperty("--offset", gap);
-  path.style.animationDuration = `${duration}s`;
+  // Expose calculated offsets to CSS keyframes
+  path.style.setProperty("--dash-start", -(dashSize + length * 0.5));
+  path.style.setProperty("--dash-end", length * 0.5);
+  path.style.animationDuration = `${speed}s`;
 
   path.classList.add("signal");
 
-  path.addEventListener(
-    "animationend",
-    () => {
-      path.classList.remove("signal");
-      path.style.strokeDasharray = "";
-      path.style.strokeDashoffset = "";
-      path.style.animationDuration = "";
-      active = false;
-      scheduleNext();
-    },
-    { once: true }
-  );
+  const cleanup = () => {
+    path.classList.remove("signal");
+    path.style.strokeDasharray = "";
+    path.style.strokeDashoffset = "";
+    path.style.animationDuration = "";
+    path.style.removeProperty("--dash-start");
+    path.style.removeProperty("--dash-end");
+    path.removeEventListener("animationend", cleanup);
+    active = false;
+    scheduleNext();
+  };
+
+  path.addEventListener("animationend", cleanup, { once: true });
 }
 
 function scheduleNext() {

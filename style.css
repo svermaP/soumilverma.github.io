@@ -90,15 +90,15 @@ footer {
 
 @keyframes pulseOnce {
   from {
-    stroke-dashoffset: var(--offset);
-    stroke-opacity: 0.25;
+    stroke-dashoffset: var(--dash-start);
+    opacity: 0.1;
   }
-  60% {
-    stroke-opacity: 0.55;
+  20% {
+    opacity: 0.5;
   }
   to {
-    stroke-dashoffset: 0;
-    stroke-opacity: 0.1;
+    stroke-dashoffset: var(--dash-end);
+    opacity: 0.1;
   }
 }
 
