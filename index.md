@@ -1,6 +1,6 @@
 ---
-layout: home
-title: ""
+layout: default
 ---
+# Soumil Verma
 Learning log.
 
