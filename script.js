@@ -13,12 +13,18 @@ function firePulse() {
 
   const length = path.getTotalLength();
 
-  const dash = Math.max(10, length * 0.08);
+  // Pulse size relative to path
+  const dash = length * 0.22;
   const gap = length;
-  const duration = 0.9 + Math.random() * 0.5;
+  const duration = 1.2 + Math.random() * 0.6;
 
+  // Apply geometry first
   path.style.strokeDasharray = `${dash} ${gap}`;
   path.style.strokeDashoffset = gap;
+
+  // Force layout so SVG commits dash state
+  path.getBoundingClientRect();
+
   path.style.setProperty("--offset", gap);
   path.style.animationDuration = `${duration}s`;
 

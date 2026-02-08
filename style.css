@@ -34,7 +34,7 @@ body {
   stroke: none;
 }
 
-/* Only visible during a pulse */
+/* Only visible during pulse */
 .diagram-lines path.signal {
   stroke: var(--pulse);
   stroke-width: 1.4;
@@ -91,14 +91,14 @@ footer {
 @keyframes pulseOnce {
   from {
     stroke-dashoffset: var(--offset);
-    stroke-opacity: 0.15;
+    stroke-opacity: 0.25;
   }
-  40% {
-    stroke-opacity: 0.5;
+  60% {
+    stroke-opacity: 0.55;
   }
   to {
     stroke-dashoffset: 0;
-    stroke-opacity: 0.05;
+    stroke-opacity: 0.1;
   }
 }
 
