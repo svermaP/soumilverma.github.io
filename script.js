@@ -1,18 +1,18 @@
 const prefersReduced = window.matchMedia("(prefers-reduced-motion: reduce)");
 
-const pickPulseLines = () => {
-  const paths = Array.from(document.querySelectorAll(".trace-lines path"));
+const applySignals = () => {
+  const paths = Array.from(document.querySelectorAll(".diagram-lines path"));
   if (!paths.length) return;
 
-  const pulseCount = Math.min(6, Math.max(3, Math.floor(paths.length / 4)));
+  const count = Math.min(4, Math.max(2, Math.floor(paths.length / 6)));
   const shuffled = paths.sort(() => Math.random() - 0.5);
 
-  shuffled.slice(0, pulseCount).forEach((path) => {
+  shuffled.slice(0, count).forEach((path) => {
     path.classList.add("pulse");
-    const duration = 16 + Math.random() * 10;
-    const delay = Math.random() * 8;
-    const dash = 14 + Math.random() * 16;
-    const gap = 200 + Math.random() * 140;
+    const duration = 20 + Math.random() * 12;
+    const delay = 4 + Math.random() * 12;
+    const dash = 10 + Math.random() * 8;
+    const gap = 220 + Math.random() * 120;
 
     path.style.animationDuration = `${duration.toFixed(1)}s`;
     path.style.animationDelay = `${delay.toFixed(1)}s`;
@@ -20,16 +20,22 @@ const pickPulseLines = () => {
   });
 };
 
+const clearSignals = () => {
+  document.querySelectorAll(".diagram-lines path").forEach((path) => {
+    path.classList.remove("pulse");
+    path.style.animationDuration = "";
+    path.style.animationDelay = "";
+    path.style.strokeDasharray = "";
+  });
+};
+
 if (!prefersReduced.matches) {
-  pickPulseLines();
+  applySignals();
 }
 
 prefersReduced.addEventListener("change", (event) => {
-  const paths = document.querySelectorAll(".trace-lines path");
-  if (event.matches) {
-    paths.forEach((path) => path.classList.remove("pulse"));
-  } else {
-    paths.forEach((path) => path.classList.remove("pulse"));
-    pickPulseLines();
+  clearSignals();
+  if (!event.matches) {
+    applySignals();
   }
 });
