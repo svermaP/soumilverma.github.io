@@ -1,19 +1,20 @@
 const prefersReduced = window.matchMedia("(prefers-reduced-motion: reduce)");
-let active = false;
+let activeCount = 0;
+const maxConcurrent = 2;
 let timer = null;
 
 function firePulse() {
-  if (active || prefersReduced.matches) return;
+  if (activeCount >= maxConcurrent || prefersReduced.matches) return;
 
   const paths = document.querySelectorAll(".diagram-lines path");
   if (!paths.length) return;
 
   const path = paths[Math.floor(Math.random() * paths.length)];
-  active = true;
+  activeCount++;
 
   const length = path.getTotalLength();
   if (length <= 0) {
-    active = false;
+    activeCount--;
     scheduleNext();
     return;
   }
@@ -25,12 +26,19 @@ function firePulse() {
 
   const speed = 1.8 + Math.random() * 0.6; // 1.8–2.4 seconds
 
-  const packet = document.querySelector(".signal-packet");
-  if (!packet) {
-    active = false;
+  // Clone a packet so multiple can animate at once
+  const svg = document.querySelector(".diagram");
+  const templatePacket = document.querySelector(".signal-packet");
+
+  if (!svg || !templatePacket) {
+    activeCount--;
     scheduleNext();
     return;
   }
+
+  const packet = templatePacket.cloneNode(true);
+  packet.classList.remove("pulse");
+  svg.appendChild(packet);
 
   // Set CSS custom properties for the animation keyframes
   packet.style.setProperty("--tx-start", `${startPt.x}px`);
@@ -45,9 +53,9 @@ function firePulse() {
   packet.classList.add("pulse");
 
   const cleanup = () => {
-    packet.classList.remove("pulse");
     packet.removeEventListener("animationend", cleanup);
-    active = false;
+    packet.remove();
+    activeCount--;
     scheduleNext();
   };
 
@@ -55,7 +63,12 @@ function firePulse() {
 }
 
 function scheduleNext() {
-  const delay = 4000 + Math.random() * 16000;
+  if (prefersReduced.matches) {
+    clearTimeout(timer);
+    return;
+  }
+  // Fire pulses more frequently for that "light pulsing" feel
+  const delay = 1200 + Math.random() * 1800; // 1.2–3s between pulses
   timer = setTimeout(firePulse, delay);
 }
 
@@ -65,6 +78,6 @@ if (!prefersReduced.matches) {
 
 prefersReduced.addEventListener("change", (e) => {
   clearTimeout(timer);
-  active = false;
+  activeCount = 0;
   if (!e.matches) scheduleNext();
 });

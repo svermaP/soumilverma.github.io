@@ -39,7 +39,7 @@ body {
   fill: var(--pulse);
   opacity: 0;
   transform-origin: center;
-  filter: drop-shadow(0 0 2px rgba(30, 36, 44, 0.2));
+  filter: drop-shadow(0 0 4px rgba(30, 36, 44, 0.5));
 }
 
 .signal-packet.pulse {
